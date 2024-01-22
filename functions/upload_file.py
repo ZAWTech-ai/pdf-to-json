@@ -1,10 +1,6 @@
-from flask import Blueprint, render_template, request, jsonify, Response, Flask
+from flask import request, jsonify
 import os
-import PyPDF2
-import docx
 import fitz  # PyMuPDF
-import sys
-from functions.detect_fill_in_the_blanks import detect_fill_in_the_blanks
 
 
 def upload_file():
