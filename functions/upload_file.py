@@ -4,35 +4,34 @@ import fitz  # PyMuPDF
 
 
 def upload_file():
-    print('FILE', request.files)
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'})
+    print('FILES', request.files)
+    uploaded_files = request.files.getlist('files')
+    if not uploaded_files:
+        return jsonify({'error': 'No files provided'})
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'})
+    text_content_by_file = []
 
-    if file:
-        # Save the uploaded file to the 'uploads' folder
-        file_path = os.path.join('uploads', file.filename)
-        file.save(file_path)
-        try:
+    for file in uploaded_files:
+        if file.filename == '':
+            return jsonify({'error': 'One or more selected files have no name'})
 
-            if file.filename.lower().endswith(('.pdf', '.doc', '.docx')):
-                # Use PyMuPDF to open the PDF and extract text
-                pages = extract_text_with_properties(file_path)
+        if file:
+            file_path = os.path.join('uploads', file.filename)
+            file.save(file_path)
 
-            else:
-                return jsonify({'error': 'Unsupported file format'})
+            try:
+                if file.filename.lower().endswith(('.pdf', '.doc', '.docx')):
+                    pages = extract_text_with_properties(file_path)
+                else:
+                    return jsonify({'error': 'Unsupported file format'})
 
-            # return render_template('home.html', text_content=pages)
-            # sortedData = sorted(pages, key=lambda x: (
-            #     x['y'], x['page'], x['x']))
-            # sortedData = sorted(pages, key=sort_by_page)
-            return jsonify({'text_content': pages})
+                text_content_by_file.append({'filename': file.filename, 'text_content': pages})
+                os.remove(file_path)
 
-        except Exception as e:
-            return jsonify({'error': str(e)})
+            except Exception as e:
+                return jsonify({'error': f'Error processing file {file.filename}: {str(e)}'})
+
+    return jsonify({'files': text_content_by_file})
 
 # Define a custom sorting key
 
