@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 app.register_blueprint(main_bp)
 
-
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20MB
 class MyHandler(FileSystemEventHandler):
     def on_any_event(self, event):
         if event.is_directory:
