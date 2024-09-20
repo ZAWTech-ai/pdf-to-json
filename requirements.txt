@@ -13,3 +13,16 @@ uvloop==0.19.0
 watchdog==3.0.0
 websockets==12.0
 Werkzeug==3.0.1
+
+boto3==1.35.23
+botocore==1.35.23
+chardet==5.2.0
+jmespath==1.0.1
+pillow==10.4.0
+pypdf2==3.0.1
+python-dateutil==2.9.0.post0
+reportlab==4.2.2
+s3transfer==0.10.2
+six==1.15.0
+typing-extensions==4.12.2
+urllib3==1.26.20
