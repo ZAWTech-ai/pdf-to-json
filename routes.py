@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, request, jsonify
 from functions.watermark import process_pdf_with_repeating_text_watermark  # Import your watermarking function
 
 from functions.upload_file import upload_file
