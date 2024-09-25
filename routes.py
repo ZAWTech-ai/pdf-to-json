@@ -32,7 +32,7 @@ def watermark_pdf():
     watermark_text = data.get('watermark_text')
 
     # Validate input
-    if not all([bucket_name, input_pdf_key, output_pdf_key, watermark_text]):
+    if not all([ input_pdf_key, output_pdf_key, watermark_text]):
         return jsonify({'error': 'Missing parameters'}), 400
 
     try:
