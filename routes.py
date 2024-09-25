@@ -27,9 +27,9 @@ def health_check():
 def watermark_pdf():
     data = request.json
     # Extract parameters from the request
-    input_pdf_key = data.get('1686320832546-G2 Week 41 (revised 2022-2023) (74WVX).pdf')
-    output_pdf_key = data.get('watermark_test1.pdf')
-    watermark_text = data.get('Confidential')
+    input_pdf_key = data.get('input_pdf_key')
+    output_pdf_key = data.get('output_pdf_key')
+    watermark_text = data.get('watermark_text')
 
     # Validate input
     if not all([bucket_name, input_pdf_key, output_pdf_key, watermark_text]):
