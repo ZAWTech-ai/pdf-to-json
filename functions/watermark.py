@@ -1,4 +1,5 @@
 import boto3
+import pikepdf
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -58,6 +59,19 @@ def create_repeating_rotated_text_watermark(watermark_text, width, height, angle
     
     return watermark_stream
 
+def flatten_pdf(pdf_stream):
+    """Flatten a PDF to make annotations, forms, and watermarks uneditable."""
+    output_pdf = io.BytesIO()
+    
+    # Open the PDF with pikepdf and save it as a flattened version
+    with pikepdf.open(pdf_stream) as pdf:
+        for page in pdf.pages:
+            page.flatten_annotations()  # This flattens annotations, including watermarks
+        pdf.save(output_pdf)
+    
+    output_pdf.seek(0)
+    return output_pdf
+
 def add_watermark_to_pdf(pdf_file, watermark_stream):
     """Add a watermark to each page of the PDF."""
     original_pdf = PdfReader(pdf_file)
@@ -75,8 +89,10 @@ def add_watermark_to_pdf(pdf_file, watermark_stream):
     pdf_writer.write(output_stream)
     output_stream.seek(0)
     
-    return output_stream
-
+    # Flatten the watermarked PDF
+    flattened_pdf = flatten_pdf(output_stream)
+    
+    return flattened_pdf
 def download_file_from_s3(bucket_name, s3_file_key):
     """Download file from S3."""
     s3_object = s3.get_object(Bucket=bucket_name, Key=s3_file_key)
