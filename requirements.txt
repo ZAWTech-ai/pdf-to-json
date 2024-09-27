@@ -12,11 +12,11 @@ itsdangerous==2.1.2
 Jinja2==3.1.3
 jmespath==1.0.1
 MarkupSafe==2.1.4
-pillow==10.4.0
+pillow
 PyMuPDF==1.23.16
 PyMuPDFb==1.23.9
 pypdf2==3.0.1
-pikepdf==5.0.0
+pikepdf
 python-dateutil==2.9.0.post0
 reportlab==4.2.2
 s3transfer==0.10.2

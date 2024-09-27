@@ -66,7 +66,8 @@ def flatten_pdf(pdf_stream):
     # Open the PDF with pikepdf and save it as a flattened version
     with pikepdf.open(pdf_stream) as pdf:
         for page in pdf.pages:
-            page.flatten_annotations()  # This flattens annotations, including watermarks
+            if page.get("/Annots"):
+                page.flatten_annotations()  # Only flatten if annotations exist
         pdf.save(output_pdf)
     
     output_pdf.seek(0)
