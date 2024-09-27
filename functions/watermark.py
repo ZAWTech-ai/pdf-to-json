@@ -66,13 +66,13 @@ def flatten_pdf(pdf_stream):
     # Open the PDF with pikepdf and save it as a flattened version
     with pikepdf.open(pdf_stream) as pdf:
         for page in pdf.pages:
-            if page.get("/Annots"):
-                page.flatten_annotations()  # Only flatten if annotations exist
+            if page.get("/Annots") is not None:
+                page.flatten_annotations()  # Flatten annotations if they exist
         pdf.save(output_pdf)
     
     output_pdf.seek(0)
     return output_pdf
-
+    
 def add_watermark_to_pdf(pdf_file, watermark_stream):
     """Add a watermark to each page of the PDF."""
     original_pdf = PdfReader(pdf_file)
