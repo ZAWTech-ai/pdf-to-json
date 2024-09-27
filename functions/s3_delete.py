@@ -24,8 +24,7 @@ def delete_pdf_from_s3(pdf_key):
     try:
         # Delete the PDF from the specified S3 bucket
         s3.delete_object(Bucket='edhubshop', Key=pdf_key)
-        print(f'{pdf_key} deleted successfully from {bucket_name}')
-        return {"message": f'{pdf_key} deleted successfully from {bucket_name}'}
+        return {"message": f'{pdf_key} deleted successfully from bucket'}
     
     except NoCredentialsError:
         return {"error": "AWS credentials are not available or invalid"}
