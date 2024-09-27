@@ -4,7 +4,9 @@ from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import io
+import os
 from pdf2image import convert_from_path
+from tempfile import NamedTemporaryFile
 
 # AWS S3 Configuration
 s3 = boto3.client('s3', aws_access_key_id='', aws_secret_access_key='', region_name='ap-southeast-1')
@@ -36,9 +38,17 @@ def create_repeating_rotated_text_watermark(watermark_text, width, height, angle
     return watermark_stream
 
 def flatten_pdf_with_images(pdf_stream):
-    """Flatten a PDF by converting it to images and saving back as a PDF."""
+    """Flatten a PDF by converting it to images and saving it back as a PDF."""
+    # Create a temporary file for the PDF
+    with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf_file:
+        temp_pdf_file.write(pdf_stream.read())
+        temp_pdf_path = temp_pdf_file.name
+    
     # Convert PDF to images
-    images = convert_from_path(pdf_stream)
+    images = convert_from_path(temp_pdf_path)
+    
+    # Remove the temporary PDF file
+    os.remove(temp_pdf_path)
     
     # Save the images as a new PDF
     output_pdf_stream = io.BytesIO()
