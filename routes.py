@@ -64,7 +64,7 @@ def delete_pdf():
         return jsonify({'error': f'Failed to delete PDF: {str(e)}'}), 500
 
 
-@main_bp.route('/delete-pdf', methods=['POST'])
+@app.route('/delete-pdf', methods=['POST'])
 def delete_pdf():
     # Get the request data (expects a JSON payload)
     data = request.get_json()
