@@ -4,6 +4,7 @@ from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import io
+from pdf2image import convert_from_path
 
 # AWS S3 Configuration
 s3 = boto3.client('s3', aws_access_key_id='', aws_secret_access_key='', region_name='ap-southeast-1')
@@ -34,20 +35,17 @@ def create_repeating_rotated_text_watermark(watermark_text, width, height, angle
     
     return watermark_stream
 
-def flatten_pdf_with_pypdf2(pdf_stream):
-    """Flatten a PDF using PyPDF2 by merging pages with a watermark."""
-    output_pdf = io.BytesIO()
-    pdf_reader = PdfReader(pdf_stream)
-    pdf_writer = PdfWriter()
-
-    # Create a blank page with the same size as the original pages
-    for page in pdf_reader.pages:
-        pdf_writer.add_page(page)
-
-    pdf_writer.write(output_pdf)
-    output_pdf.seek(0)
+def flatten_pdf_with_images(pdf_stream):
+    """Flatten a PDF by converting it to images and saving back as a PDF."""
+    # Convert PDF to images
+    images = convert_from_path(pdf_stream)
     
-    return output_pdf
+    # Save the images as a new PDF
+    output_pdf_stream = io.BytesIO()
+    images[0].save(output_pdf_stream, save_all=True, append_images=images[1:])
+    
+    output_pdf_stream.seek(0)
+    return output_pdf_stream
 
 def add_watermark_to_pdf(pdf_file, watermark_stream):
     """Add a watermark to each page of the PDF."""
@@ -66,8 +64,8 @@ def add_watermark_to_pdf(pdf_file, watermark_stream):
     pdf_writer.write(output_stream)
     output_stream.seek(0)
     
-    # Flatten the watermarked PDF using PyPDF2
-    flattened_pdf = flatten_pdf_with_pypdf2(output_stream)
+    # Flatten the watermarked PDF using image conversion
+    flattened_pdf = flatten_pdf_with_images(output_stream)
     
     return flattened_pdf
 
