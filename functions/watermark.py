@@ -33,46 +33,22 @@ def create_repeating_rotated_text_watermark(watermark_text, width, height, angle
     watermark_stream.seek(0)
     
     return watermark_stream
-    """Create a watermark from text using ReportLab and repeat it."""
-    # Create an in-memory stream for the watermark PDF
-    watermark_stream = io.BytesIO()
-    c = canvas.Canvas(watermark_stream, pagesize=(width, height))
-    
-    # Set transparency for watermark (optional)
-    c.setFillAlpha(0.3)
-    
-    # Set font and size
-    c.setFont("Helvetica", 40)
-    
-    # Repeat the watermark across the page
-    x, y = 100, 400  # Starting position
-    spacing = 300    # Space between repeated watermarks
-    for i in range(5):  # Adjust the range for more/less repetition
-        for j in range(5):  # Adjust for more rows
-            c.translate(300,500)
-            c.rotate(45)
-            c.drawString(x + i * spacing, y - j * 100, watermark_text)
-    
-    # Finish the PDF and save the stream
-    c.save()
-    watermark_stream.seek(0)
-    
-    return watermark_stream
 
-def flatten_pdf(pdf_stream):
-    """Flatten a PDF to make annotations, forms, and watermarks uneditable."""
+def flatten_pdf_with_pypdf2(pdf_stream):
+    """Flatten a PDF using PyPDF2 by merging pages with a watermark."""
     output_pdf = io.BytesIO()
-    
-    # Open the PDF with pikepdf and save it as a flattened version
-    with pikepdf.open(pdf_stream) as pdf:
-        for page in pdf.pages:
-            if page.get("/Annots") is not None:
-                page.flatten_annotations()  # Flatten annotations if they exist
-        pdf.save(output_pdf)
-    
+    pdf_reader = PdfReader(pdf_stream)
+    pdf_writer = PdfWriter()
+
+    # Create a blank page with the same size as the original pages
+    for page in pdf_reader.pages:
+        pdf_writer.add_page(page)
+
+    pdf_writer.write(output_pdf)
     output_pdf.seek(0)
-    return output_pdf
     
+    return output_pdf
+
 def add_watermark_to_pdf(pdf_file, watermark_stream):
     """Add a watermark to each page of the PDF."""
     original_pdf = PdfReader(pdf_file)
@@ -83,17 +59,18 @@ def add_watermark_to_pdf(pdf_file, watermark_stream):
     
     for page_number in range(len(original_pdf.pages)):
         page = original_pdf.pages[page_number]
-        page.merge_page(watermark_page)
+        page.merge_page(watermark_page)  # Merge the watermark onto the page
         pdf_writer.add_page(page)
     
     output_stream = io.BytesIO()
     pdf_writer.write(output_stream)
     output_stream.seek(0)
     
-    # Flatten the watermarked PDF
-    flattened_pdf = flatten_pdf(output_stream)
+    # Flatten the watermarked PDF using PyPDF2
+    flattened_pdf = flatten_pdf_with_pypdf2(output_stream)
     
     return flattened_pdf
+
 def download_file_from_s3(bucket_name, s3_file_key):
     """Download file from S3."""
     s3_object = s3.get_object(Bucket=bucket_name, Key=s3_file_key)
@@ -104,6 +81,7 @@ def upload_file_to_s3(bucket_name, s3_file_key, file_stream):
     s3.put_object(Bucket=bucket_name, Key=s3_file_key, Body=file_stream)
 
 def process_pdf_with_repeating_text_watermark(bucket_name, input_pdf_key, output_pdf_key, watermark_text):
+    """Process the PDF by adding a repeating text watermark."""
     # Download the original PDF from S3
     original_pdf_stream = download_file_from_s3(bucket_name, input_pdf_key)
     
@@ -114,5 +92,4 @@ def process_pdf_with_repeating_text_watermark(bucket_name, input_pdf_key, output
     watermarked_pdf_stream = add_watermark_to_pdf(original_pdf_stream, watermark_stream)
     
     # Upload the watermarked PDF back to S3
-    upload_file_to_s3('edhubshop', output_pdf_key, watermarked_pdf_stream)
-
+    upload_file_to_s3(bucket_name, output_pdf_key, watermarked_pdf_stream)
