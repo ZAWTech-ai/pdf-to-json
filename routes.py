@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from functions.watermark import process_pdf_with_repeating_text_watermark  # Import your watermarking function
-
+from functions.s3_delete import delete_pdf_from_s3
 from functions.upload_file import upload_file
 
 
@@ -41,3 +41,41 @@ def watermark_pdf():
         return jsonify({'message': 'Watermark added successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/delete-pdf', methods=['POST'])
+def delete_pdf():
+    # Get the PDF key from the request
+    data = request.get_json()
+    pdf_key = data.get('pdf_key')
+
+    if not pdf_key:
+        return jsonify({'error': 'PDF key is required'}), 400
+
+    try:
+        # Delete the object from the S3 bucket
+        s3.delete_object(Bucket='edhubshop', Key=pdf_key)
+        return jsonify({'message': f'{pdf_key} deleted successfully'}), 200
+
+    except NoCredentialsError:
+        return jsonify({'error': 'Credentials not available'}), 403
+
+    except ClientError as e:
+        return jsonify({'error': f'Failed to delete PDF: {str(e)}'}), 500
+
+
+@main_bp.route('/delete-pdf', methods=['POST'])
+def delete_pdf():
+    # Get the request data (expects a JSON payload)
+    data = request.get_json()
+    # Extract values from the request JSON body
+    pdf_key = data.get('pdf_key')
+    # Validate input parameters
+    if not all([pdf_key]):
+        return jsonify({"error": "Missing required parameters"}), 400
+
+    # Call the function to delete the PDF from S3
+    response = delete_pdf_from_s3(pdf_key)
+
+    # Return the response as JSON
+    return jsonify(response), 200 if 'message' in response else 500
