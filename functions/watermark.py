@@ -38,29 +38,31 @@ def create_repeating_rotated_text_watermark(watermark_text, width, height, angle
     return watermark_stream
 
 def flatten_pdf_with_images(pdf_stream):
-    """Flatten a PDF by converting it to images and saving it back as a PDF."""
-    # Create a temporary file for the PDF
+    """Flatten a PDF by converting each page to images and recombining them into a single PDF."""
+    
+    # Create a temporary file to hold the PDF data
     with NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf_file:
+        # Write the BytesIO stream to the temporary file
         temp_pdf_file.write(pdf_stream.read())
-        temp_pdf_path = temp_pdf_file.name
+        temp_pdf_path = temp_pdf_file.name  # Get the temp file path
     
-    # Convert PDF to images using the temp file path
     try:
+        # Convert the PDF to images using the temp file path
         images = convert_from_path(temp_pdf_path)
-    except Exception as e:
-        print(f"Error during conversion: {e}")
-        return None
-    
-    # Remove the temporary PDF file after conversion
-    os.remove(temp_pdf_path)
-    
-    # Save the images as a new PDF
-    output_pdf_stream = io.BytesIO()
-    images[0].save(output_pdf_stream, save_all=True, append_images=images[1:])
-    
-    output_pdf_stream.seek(0)
-    return output_pdf_stream
-    
+
+        # Prepare an output stream to save the flattened PDF
+        output_pdf_stream = io.BytesIO()
+
+        # Convert the images back to a PDF
+        images[0].save(output_pdf_stream, save_all=True, append_images=images[1:], format="PDF")
+        output_pdf_stream.seek(0)  # Rewind the stream to the beginning
+        
+        # Return the flattened PDF stream
+        return output_pdf_stream
+
+    finally:
+        # Clean up: Remove the temporary file after conversion
+        os.remove(temp_pdf_path)
 def add_watermark_to_pdf(pdf_file, watermark_stream):
     """Add a watermark to each page of the PDF."""
     original_pdf = PdfReader(pdf_file)
