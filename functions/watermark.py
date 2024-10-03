@@ -16,7 +16,7 @@ def create_repeating_rotated_text_watermark(watermark_text, width, height, angle
     watermark_stream = io.BytesIO()
     c = canvas.Canvas(watermark_stream, pagesize=(width, height))
     
-    c.setFillAlpha(0.3)  # Set transparency for the watermark
+    c.setFillAlpha(0.1)  # Set transparency for the watermark
     c.setFont("Helvetica", 40)
 
     # Define starting position and spacing
