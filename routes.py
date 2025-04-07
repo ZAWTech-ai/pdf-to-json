@@ -37,7 +37,7 @@ def watermark_pdf():
 
     try:
         # Call the watermark processing function
-        process_pdf_with_repeating_text_watermark('edhubshop', input_pdf_key, output_pdf_key, watermark_text)
+        process_pdf_with_repeating_text_watermark(input_pdf_key, output_pdf_key, watermark_text)
         return jsonify({'message': 'Watermark added successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

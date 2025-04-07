@@ -6,9 +6,17 @@ import io
 import os
 from pdf2image import convert_from_path
 from tempfile import NamedTemporaryFile
+from dotenv import load_dotenv
+
+load_dotenv()
+
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_region = os.getenv("AWS_REGION")
+aws_bucket_name = os.getenv("AWS_BUCKET_NAME")
 
 # AWS S3 Configuration
-s3 = boto3.client('s3', aws_access_key_id='', aws_secret_access_key='', region_name='ap-southeast-1')
+s3 = boto3.client('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=aws_region)
 
 def create_repeating_rotated_text_watermark(watermark_text, width, height, angle=45):
     """Create a rotated watermark from text using ReportLab and repeat it."""
@@ -93,8 +101,9 @@ def upload_file_to_s3(bucket_name, s3_file_key, file_stream):
     """Upload file to S3."""
     s3.put_object(Bucket=bucket_name, Key=s3_file_key, Body=file_stream)
 
-def process_pdf_with_repeating_text_watermark(bucket_name, input_pdf_key, output_pdf_key, watermark_text):
+def process_pdf_with_repeating_text_watermark(input_pdf_key, output_pdf_key, watermark_text):
     """Process the PDF by adding a repeating text watermark."""
+    bucket_name = aws_bucket_name
     # Download the original PDF from S3
     original_pdf_stream = download_file_from_s3(bucket_name, input_pdf_key)
     
