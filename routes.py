@@ -6,7 +6,7 @@ from functions.upload_file import upload_file
 
 
 main_bp = Blueprint('main_bp', __name__)
-
+ALLOWED_ORIGINS = ["https://beta.edhub.school", "https://shop.edhub.school"]
 
 @main_bp.route('/upload', methods=['POST'])
 def upload():
@@ -59,20 +59,24 @@ def delete_pdf():
     # Return the response as JSON
     return jsonify(response), 200 if 'message' in response else 500
 
-
 @main_bp.route('/send-email', methods=['POST'])
 def send_email_route():
     try:
+        origin = request.headers.get('Origin')
+        if origin not in ALLOWED_ORIGINS:
+            return jsonify({"error": "Unauthorized domain"}), 403
+
         data = request.json
         name = data.get('name')
         role = data.get('role')
         contact_number = data.get('contact_number')
         email = data.get('email')
+        src = data.get('src')
 
         if not name or not role or not contact_number or not email:
             return jsonify({"error": "Missing required fields"}), 400
 
-        result = send_email(name, role, contact_number, email)
+        result = send_email(name, role, contact_number, email, src)
         return jsonify({"message": result}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

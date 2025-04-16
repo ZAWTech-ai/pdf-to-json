@@ -14,8 +14,8 @@ SMTP_PORT = 587
 SENDER_EMAIL = os.getenv("EMAIL_USER")
 SENDER_PASSWORD = os.getenv("EMAIL_PASS")
 
-def send_email(name, role, contact_number, email):
-    recipient_email = "waleedumer42@gmail.com"
+def send_email(name, role, contact_number, email, src):
+    recipient_email = os.getenv("recipient_email")
 
     subject = "New Submission from " + name
     body = f"""
@@ -25,6 +25,7 @@ def send_email(name, role, contact_number, email):
     Role: {role}
     Contact Number: {contact_number}
     Email: {email}
+    Src: {src}
     """
 
     msg = MIMEMultipart()
