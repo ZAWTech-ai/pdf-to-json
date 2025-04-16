@@ -6,7 +6,7 @@ from functions.upload_file import upload_file
 
 
 main_bp = Blueprint('main_bp', __name__)
-ALLOWED_ORIGINS = ["https://beta.edhub.school", "https://shop.edhub.school"]
+ALLOWED_ORIGINS = ["https://beta.edhub.school", "https://edhub.school"]
 
 @main_bp.route('/upload', methods=['POST'])
 def upload():
