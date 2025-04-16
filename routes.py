@@ -71,12 +71,12 @@ def send_email_route():
         role = data.get('role')
         contact_number = data.get('contact_number')
         email = data.get('email')
-        src = data.get('src')
+        Source = data.get('Source')
 
         if not name or not role or not contact_number or not email:
             return jsonify({"error": "Missing required fields"}), 400
 
-        result = send_email(name, role, contact_number, email, src)
+        result = send_email(name, role, contact_number, email, Source)
         return jsonify({"message": result}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -14,8 +14,8 @@ SMTP_PORT = 587
 SENDER_EMAIL = os.getenv("EMAIL_USER")
 SENDER_PASSWORD = os.getenv("EMAIL_PASS")
 
-def send_email(name, role, contact_number, email, src):
-    recipient_email = os.getenv("ADMIN_EMAIL")
+def send_email(name, role, contact_number, email, Source):
+    ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
     subject = "New Submission from " + name
     body = f"""
@@ -25,12 +25,12 @@ def send_email(name, role, contact_number, email, src):
     Role: {role}
     Contact Number: {contact_number}
     Email: {email}
-    Src: {src}
+    Source: {Source}
     """
 
     msg = MIMEMultipart()
     msg['From'] = SENDER_EMAIL
-    msg['To'] = recipient_email
+    msg['To'] = ADMIN_EMAIL
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain', _charset='utf-8'))
 
@@ -38,7 +38,7 @@ def send_email(name, role, contact_number, email, src):
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
         server.starttls()
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.sendmail(SENDER_EMAIL, recipient_email, msg.as_string())
+        server.sendmail(SENDER_EMAIL, ADMIN_EMAIL, msg.as_string())
         server.quit()
         return "Email sent successfully!"
     except Exception as e:
