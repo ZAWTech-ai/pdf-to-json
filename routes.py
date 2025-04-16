@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from functions.watermark import process_pdf_with_repeating_text_watermark  # Import your watermarking function
 from functions.s3_delete import delete_pdf_from_s3
+from functions.send_email import send_email
 from functions.upload_file import upload_file
 
 
@@ -57,3 +58,21 @@ def delete_pdf():
 
     # Return the response as JSON
     return jsonify(response), 200 if 'message' in response else 500
+
+
+@main_bp.route('/send-email', methods=['POST'])
+def send_email_route():
+    try:
+        data = request.json
+        name = data.get('name')
+        role = data.get('role')
+        contact_number = data.get('contact_number')
+        email = data.get('email')
+
+        if not name or not role or not contact_number or not email:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        result = send_email(name, role, contact_number, email)
+        return jsonify({"message": result}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
