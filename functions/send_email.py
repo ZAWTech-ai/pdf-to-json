@@ -15,7 +15,7 @@ SENDER_EMAIL = os.getenv("EMAIL_USER")
 SENDER_PASSWORD = os.getenv("EMAIL_PASS")
 
 def send_email(name, role, contact_number, email, src):
-    recipient_email = os.getenv("recipient_email")
+    recipient_email = os.getenv("ADMIN_EMAIL")
 
     subject = "New Submission from " + name
     body = f"""
