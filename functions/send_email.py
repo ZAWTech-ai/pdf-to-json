@@ -17,7 +17,7 @@ SENDER_PASSWORD = os.getenv("EMAIL_PASS")
 def send_email(name, role, contact_number, email, Source):
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
-    subject = "New Submission from " + name
+    subject = Source
     body = f"""
     You have received a new submission.
 
