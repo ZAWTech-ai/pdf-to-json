@@ -1,6 +1,7 @@
 from flask import request, jsonify
 import os
 import fitz  # PyMuPDF
+from functions.ai_assistant import extract_questions_answers 
 
 
 def upload_file():
@@ -25,12 +26,15 @@ def upload_file():
                 else:
                     return jsonify({'error': 'Unsupported file format'})
 
+                
                 text_content_by_file.append({'filename': file.filename, 'text_content': pages})
                 os.remove(file_path)
 
             except Exception as e:
                 return jsonify({'error': f'Error processing file {file.filename}: {str(e)}'})
-
+    # If you want to extract questions and answers from the text content
+    if 'use_ai' in request.form:
+        text_content_by_file = extract_questions_answers(text_content_by_file)
     return jsonify({'files': text_content_by_file})
 
 # Define a custom sorting key
