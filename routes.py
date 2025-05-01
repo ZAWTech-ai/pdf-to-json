@@ -3,10 +3,15 @@ from functions.watermark import process_pdf_with_repeating_text_watermark  # Imp
 from functions.s3_delete import delete_pdf_from_s3
 from functions.send_email import send_email
 from functions.upload_file import upload_file
+from functions.lite_llm import get_completion
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 main_bp = Blueprint('main_bp', __name__)
 ALLOWED_ORIGINS = ["https://beta.edhub.school", "https://edhub.school"]
+API_KEY = os.getenv("X_API_KEY")
 
 @main_bp.route('/upload', methods=['POST'])
 def upload():
@@ -78,5 +83,25 @@ def send_email_route():
 
         result = send_email(name, role, contact_number, email, Source)
         return jsonify({"message": result}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@main_bp.route('/lite-llm-ai', methods=['POST'])
+def lite_llm_ai():
+    try:
+        # Check API key
+        api_key = request.headers.get('x-api-key')
+        if not api_key or api_key != API_KEY:
+            return jsonify({"error": "Invalid or missing X-API-KEY"}), 401
+
+        data = request.json
+        prompt = data.get('prompt')
+        model = data.get('model', 'gpt-4')  # Default to gpt-4 if not specified
+
+        if not prompt:
+            return jsonify({"error": "Prompt is required"}), 400
+
+        response = get_completion(prompt, model)
+        return jsonify({"response": response}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
