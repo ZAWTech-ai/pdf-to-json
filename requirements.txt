@@ -31,4 +31,3 @@ werkzeug==3.0.1
 zipp==3.20.2
 pdf2image
 openai==1.11.1
-litellm
