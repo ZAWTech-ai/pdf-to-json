@@ -1,9 +1,13 @@
+import json
+import re
 from flask import Blueprint, request, jsonify
-from functions.watermark import process_pdf_with_repeating_text_watermark  # Import your watermarking function
+# Import your watermarking function
+from functions.watermark import process_pdf_with_repeating_text_watermark
 from functions.s3_delete import delete_pdf_from_s3
 from functions.send_email import send_email
 from functions.upload_file import upload_file
 from functions.lite_llm import get_completion
+from functions.open_ai import get_open_ai_completion
 import os
 from dotenv import load_dotenv
 
@@ -12,6 +16,7 @@ load_dotenv()
 main_bp = Blueprint('main_bp', __name__)
 ALLOWED_ORIGINS = ["https://beta.edhub.school", "https://edhub.school"]
 API_KEY = os.getenv("X_API_KEY")
+
 
 @main_bp.route('/upload', methods=['POST'])
 def upload():
@@ -29,6 +34,7 @@ def health_check():
     # Return the response as JSON
     return jsonify(response)
 
+
 @main_bp.route('/watermark', methods=['POST'])
 def watermark_pdf():
     data = request.json
@@ -38,15 +44,17 @@ def watermark_pdf():
     watermark_text = data.get('watermark_text')
 
     # Validate input
-    if not all([ input_pdf_key, output_pdf_key, watermark_text]):
+    if not all([input_pdf_key, output_pdf_key, watermark_text]):
         return jsonify({'error': 'Missing parameters'}), 400
 
     try:
         # Call the watermark processing function
-        process_pdf_with_repeating_text_watermark(input_pdf_key, output_pdf_key, watermark_text)
+        process_pdf_with_repeating_text_watermark(
+            input_pdf_key, output_pdf_key, watermark_text)
         return jsonify({'message': 'Watermark added successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @main_bp.route('/delete-pdf', methods=['POST'])
 def delete_pdf():
@@ -63,6 +71,7 @@ def delete_pdf():
 
     # Return the response as JSON
     return jsonify(response), 200 if 'message' in response else 500
+
 
 @main_bp.route('/send-email', methods=['POST'])
 def send_email_route():
@@ -86,6 +95,7 @@ def send_email_route():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @main_bp.route('/lite-llm-ai', methods=['POST'])
 def lite_llm_ai():
     try:
@@ -103,5 +113,35 @@ def lite_llm_ai():
 
         response = get_completion(prompt, model)
         return jsonify({"response": response}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@main_bp.route('/open-ai', methods=['POST'])
+def open_ai():
+    try:
+        # Check API key
+        api_key = request.headers.get('x-api-key')
+        if not api_key or api_key != API_KEY:
+            return jsonify({"error": "Invalid or missing X-API-KEY"}), 401
+
+        data = request.json
+        prompt = data.get('prompt')
+        model = data.get('model', 'gpt-4')  # Default to gpt-4 if not specified
+
+        if not prompt:
+            return jsonify({"error": "Prompt is required"}), 400
+
+        response = get_open_ai_completion(prompt, model)
+        response = response.dict()
+        response = response['output'][0]['content'][0]['text']
+        match = re.search(r"```json\n(.*?)\n```", response, re.DOTALL)
+        if match:
+            json_text = match.group(1)
+            # Step 2: Convert to Python object
+            data = json.loads(json_text)
+            return jsonify(data), 200
+        else:
+            print("No JSON found.")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
