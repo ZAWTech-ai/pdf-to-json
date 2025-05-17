@@ -1,0 +1,468 @@
+{% extends "base.html" %} {% block title %}Upload Files - EdHub{% endblock %} {%
+block head %}
+<style>
+  .main-container {
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: flex-start;
+  }
+
+  .files-section {
+    flex: 1;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .upload-container {
+    width: 30%;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .upload-area {
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .upload-area:hover {
+    background-color: #f8f9fa;
+  }
+
+  .upload-area.dragover {
+    background-color: #e9ecef;
+    border-color: #0056b3;
+  }
+
+  .file-list {
+    margin-top: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .file-info {
+    flex: 1;
+  }
+
+  .file-name {
+    font-weight: 500;
+  }
+
+  .file-size {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .file-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .status-processed {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .status-uploaded,
+  .status-processing,
+  .status-pending,
+  .status-validating {
+    background-color: #fd7e14;
+    color: white;
+  }
+
+  small.file-id {
+    padding: 2px 5px;
+    background: #d4d4d4;
+    border-radius: 4px;
+    color: #767676;
+  }
+
+  .status-error {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #e9ecef;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+
+  .progress {
+    height: 100%;
+    background-color: #007bff;
+    width: 0;
+    transition: width 0.3s;
+  }
+
+  .remove-file {
+    margin-left: 1rem;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border: none;
+    background: none;
+  }
+
+  .remove-file:hover {
+    color: #c82333;
+  }
+
+  .upload-button {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+    width: 100%;
+  }
+
+  .upload-button:hover {
+    background-color: #0056b3;
+  }
+
+  .upload-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+
+  .files-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  .files-table th,
+  .files-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .files-table th {
+    background-color: #e9ecef;
+    font-weight: 600;
+  }
+
+  .files-table tr:hover {
+    background-color: #f1f3f5;
+  }
+
+  .error-message {
+    color: #dc3545;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #f8d7da;
+    border-radius: 4px;
+  }
+
+  .create-job-btn {
+    padding: 0.25rem 0.75rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background-color 0.3s;
+  }
+
+  .create-job-btn:hover {
+    background-color: #0056b3;
+  }
+
+  .create-job-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+
+  .create-job-btn.processing {
+    background-color: #fd7e14;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="main-container">
+  <div class="files-section">
+    <h3>Uploaded Data sets</h3>
+    {% if files %}
+    <table class="files-table">
+      <thead>
+        <tr>
+          <th>Filename</th>
+          <th>Size</th>
+          <th>Created</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for file in files %}
+        <tr>
+          <td>
+            {{ file.filename }}</br>
+            <small class="file-id">{{file.id}}</small>
+          </td>
+          <td>{{ (file.bytes / 1024)|round(2) }} KB</td>
+          <td>{{ file.created_at|datetime }}</td>
+          <td>
+            <span
+              class="file-status {% if file.status == 'processed' %}status-processed{% else %}status-{{ file.status }}{% endif %}"
+            >
+              {{ file.status }}
+            </span>
+          </td>
+          <td>
+            <button 
+              class="create-job-btn" 
+              onclick="createTrainingJob('{{ file.id }}', this)"
+              {% if file.status != 'processed' %}disabled{% endif %}
+            >
+              Create Job
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No files uploaded yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="upload-container">
+    <h4 style="margin-bottom: 1.5rem; text-align: center">
+      Upload data set for Fine-tuning
+    </h4>
+
+    {% if error %}
+    <div class="error-message">Error: {{ error }}</div>
+    {% endif %}
+
+    <div class="upload-area" id="dropZone">
+      <small>Drag and drop files here or click to select files</small>
+      <input
+        type="file"
+        id="fileInput"
+        multiple
+        accept=".jsonl"
+        style="display: none"
+      />
+    </div>
+
+    <div class="file-list" id="fileList"></div>
+
+    <button class="upload-button" id="uploadButton" disabled>
+      Upload Files
+    </button>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("fileInput");
+  const fileList = document.getElementById("fileList");
+  const uploadButton = document.getElementById("uploadButton");
+  let files = [];
+
+  // Handle file selection
+  function handleFiles(filesList) {
+    files = Array.from(filesList);
+    updateFileList();
+    updateUploadButton();
+  }
+
+  // Update file list display
+  function updateFileList() {
+    fileList.innerHTML = "";
+    files.forEach((file, index) => {
+      const fileItem = document.createElement("div");
+      fileItem.className = "file-item";
+      fileItem.innerHTML = `
+        <div class="file-info">
+          <div class="file-name">${file.name}</div>
+          <div class="file-size">${formatFileSize(file.size)}</div>
+          <div class="progress-bar">
+            <div class="progress" id="progress-${index}"></div>
+          </div>
+        </div>
+        <div class="file-status status-pending" id="status-${index}">Pending</div>
+        <button class="remove-file" onclick="removeFile(${index})">×</button>
+      `;
+      fileList.appendChild(fileItem);
+    });
+  }
+
+  // Format file size
+  function formatFileSize(bytes) {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+
+  // Remove file from list
+  function removeFile(index) {
+    files.splice(index, 1);
+    updateFileList();
+    updateUploadButton();
+  }
+
+  // Update upload button state
+  function updateUploadButton() {
+    uploadButton.disabled = files.length === 0;
+  }
+
+  // Handle file upload
+  async function uploadFiles() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to upload files");
+      return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/fine-tune-upload", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          document.getElementById(`status-${i}`).className =
+            "file-status status-success";
+          document.getElementById(`status-${i}`).textContent = "Success";
+          document.getElementById(`progress-${i}`).style.width = "100%";
+        } else {
+          throw new Error(result.error || "Upload failed");
+        }
+      } catch (error) {
+        document.getElementById(`status-${i}`).className =
+          "file-status status-error";
+        document.getElementById(`status-${i}`).textContent = "Error";
+        console.error("Upload error:", error);
+      }
+    }
+
+    // Clear files after upload
+    setTimeout(() => {
+      files = [];
+      updateFileList();
+      updateUploadButton();
+    }, 2000);
+  }
+
+  // Event listeners
+  dropZone.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
+  uploadButton.addEventListener("click", uploadFiles);
+
+  // Drag and drop handlers
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("dragover");
+  });
+
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    handleFiles(e.dataTransfer.files);
+  });
+
+  // Add datetime filter
+  const datetimeFilter = (timestamp) => {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleString();
+  };
+
+  // Register the filter
+  document.addEventListener("DOMContentLoaded", () => {
+    const timestamps = document.querySelectorAll("[data-timestamp]");
+    timestamps.forEach((element) => {
+      const timestamp = parseInt(element.getAttribute("data-timestamp"));
+      element.textContent = datetimeFilter(timestamp);
+    });
+  });
+
+  async function createTrainingJob(fileId, button) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to create a training job");
+      return;
+    }
+
+    try {
+      button.disabled = true;
+      button.classList.add('processing');
+      button.textContent = 'Creating...';
+
+      const response = await fetch("/create-training-job", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          training_file: fileId,
+          model: "gpt-4.1-nano-2025-04-14"
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        button.textContent = 'Job Created';
+        button.style.backgroundColor = '#28a745';
+      } else {
+        throw new Error(result.error || "Failed to create training job");
+      }
+    } catch (error) {
+      console.error("Error creating training job:", error);
+      button.textContent = 'Failed';
+      button.style.backgroundColor = '#dc3545';
+    }
+  }
+</script>
+{% endblock %}

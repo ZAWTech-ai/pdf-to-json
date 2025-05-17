@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% block title %}{% endblock %}</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        background-color: #ffffff;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+        text-decoration: none;
+      }
+
+      .logo img {
+        height: 40px;
+        width: auto;
+      }
+
+      .header-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .auth-button {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 0.3s;
+      }
+
+      .login-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+      }
+
+      .login-button:hover {
+        background-color: #0056b3;
+      }
+
+      .logout-button {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+      }
+
+      .logout-button:hover {
+        background-color: #c82333;
+      }
+
+      .upload-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        text-decoration: none;
+      }
+
+      .upload-button:hover {
+        background-color: #0056b3;
+      }
+
+      .content {
+        flex: 1;
+        padding: 2rem;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .nav-link {
+        text-decoration: none;
+        color: gray;
+        margin: 0 10px;
+      }
+    </style>
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <header class="header">
+      <a href="/" class="logo">
+        <img
+          src="/static/logo.png"
+          alt="Logo"
+          onerror="this.style.display='none'"
+        />
+        <span>EdHub AI Playground</span>
+      </a>
+      <div class="header-buttons">
+        <a href="/playground" class="nav-link" id="plagroundBtn">Playground</a>
+        <a href="/data-sets" class="nav-link" id="uploadBtn">Data sets</a>
+        <a href="/fine-tuning" class="nav-link" id="uploadBtn">Fine tuning</a>
+        <a href="/login" class="auth-button login-button" id="loginBtn"
+          >Login</a
+        >
+        <button
+          class="auth-button logout-button hidden"
+          id="logoutBtn"
+          onclick="logout()"
+        >
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <main class="content">{% block content %}{% endblock %}</main>
+
+    <script>
+      // Check if user is logged in
+      function checkAuth() {
+        const token = localStorage.getItem("token");
+        const loginBtn = document.getElementById("loginBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const uploadBtn = document.getElementById("uploadBtn");
+        const jobsBtn = document.getElementById("jobsBtn");
+        const plagroundBtn = document.getElementById("plagroundBtn");
+
+        if (token) {
+          loginBtn.classList.add("hidden");
+          logoutBtn.classList.remove("hidden");
+          uploadBtn.classList.remove("hidden");
+          jobsBtn.classList.remove("hidden");
+          plagroundBtn.classList.remove("hidden");
+        } else {
+          loginBtn.classList.remove("hidden");
+          logoutBtn.classList.add("hidden");
+          uploadBtn.classList.add("hidden");
+          jobsBtn.classList.add("hidden");
+          plagroundBtn.classList.add("hidden");
+        }
+      }
+
+      // Logout function
+      async function logout() {
+        try {
+          const response = await fetch("/logout", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.ok) {
+            localStorage.removeItem("token");
+            window.location.href = "/";
+          }
+        } catch (error) {
+          console.error("Logout failed:", error);
+        }
+      }
+
+      // Check auth status on page load
+      document.addEventListener("DOMContentLoaded", checkAuth);
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
