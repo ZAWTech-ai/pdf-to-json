@@ -294,16 +294,42 @@ def open_ai():
             return jsonify({"error": "Prompt is required"}), 400
 
         response = get_open_ai_completion(prompt, model)
-        response = response.dict()
-        response = response['output'][0]['content'][0]['text']
-        match = re.search(r"```json\n(.*?)\n```", response, re.DOTALL)
-        if match:
-            json_text = match.group(1)
-            # Step 2: Convert to Python object
-            data = json.loads(json_text)
-            return jsonify(data), 200
+        response_dict = response.dict()
+        text = response_dict['output'][0]['content'][0]['text']
+        # Step 1: Clean triple backticks
+        cleaned = re.sub(r"```json\s*|\s*```", "", text).strip()
+        # Step 2: Remove illegal backslashes
+        cleaned = re.sub(r'\\(?![\\/"bfnrtu])', '', cleaned)
+
+        # Optional: decode unicode-escaped characters (if needed)
+        # cleaned = bytes(cleaned, "utf-8").decode("unicode_escape")  # Only if you're double-escaped
+        # Step 3: Parse JSON
+        parsed = json.loads(cleaned)
+        # Step 4: Wrap in object format if needed
+        if isinstance(parsed, list):
+            return jsonify({"questions": parsed}), 200
         else:
-            print("No JSON found.")
+            return jsonify(parsed), 200
+
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"JSON decode error: {str(e)}", "raw": cleaned}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    # If the result is a list, convert to object format
+   
+        # return parsed
+        # return jsonify(data), 200
+        # data = json.loads(text)
+        # match = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
+
+        # if match:
+        #     json_text = match.group(1)
+        #     # Step 2: Convert to Python object
+        #     data = json.loads(json_text)
+        #     return jsonify(data), 200
+        # else:
+        #     data = json.loads(text)
+        #     return jsonify(data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
