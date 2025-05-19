@@ -1,0 +1,282 @@
+{% extends "base.html" %} {% block title %}Fine-tuning Jobs - EdHub{% endblock
+%} {% block head %}
+<style>
+  .jobs-container {
+    /* max-width: 1200px; */
+    margin: 0rem -2rem;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
+  }
+
+  .jobs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  .jobs-table th,
+  .jobs-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .fine-tuned-model{
+    font-size: 10px;
+    padding: 2px 5px;
+    background: #d4d4d4;
+    border-radius: 4px;
+    color: #767676;
+  }
+
+  .jobs-table th {
+    background-color: #e9ecef;
+    font-weight: 600;
+  }
+
+  .jobs-table tr:hover {
+    background-color: #f1f3f5;
+  }
+
+  .job-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .status-succeeded {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .status-running {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .status-failed {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .status-queued,
+  .status-validating {
+    background-color: #fd7e14;
+    color: white;
+  }
+
+  .job-id {
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: #6c757d;
+  }
+
+  .error-message {
+    color: #dc3545;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #f8d7da;
+    border-radius: 4px;
+  }
+
+  .model-name {
+    font-weight: 500;
+    color: #495057;
+  }
+
+  .timestamp {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+.delete-btn{
+   background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+  .use-model-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .use-model-btn:hover {
+    background-color: #45a049;
+  }
+
+  .table-header-action{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="jobs-container">
+    <div class="table-header-action">
+        <h2 style="margin-bottom: 1.5rem; text-align: center">Fine-tuning Jobs</h2>
+        <button class="use-model-btn" data-model="gpt-4o-mini">Use default (4o-mini)</button>
+    </div>
+
+  {% if error %}
+  <div class="error-message">Error: {{ error }}</div>
+  {% endif %} {% if jobs %}
+  <table class="jobs-table">
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Base Model</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Finished</th>
+        <th>Error</th>
+        <th>Actions</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      {%if job.status != 'cancelled'%}
+      <tr>
+        <td>
+          <span class="job-id">{{ job.id }}</span><br />
+          {%if job.fine_tuned_model %}
+          <p><small class="fine-tuned-model">Fine tuned model: {{ job.fine_tuned_model }}</small></p>
+          {% endif %}
+       
+          {%if job.training_file %}
+          <p><small class="fine-tuned-model">Training file: {{ job.training_file }}</small></p>
+          {% endif %}
+        </td>
+        <td>
+          <span class="model-name">{{ job.model }}</span>
+        </td>
+        <td>
+          <span class="job-status status-{{ job.status }}">
+            {{ job.status }}
+          </span>
+          {% if job.error %}
+          <div
+            class="error-message"
+            style="margin-top: 0.5rem; font-size: 0.75rem"
+          >
+            {{ job.error.message }}
+          </div>
+          {% endif %}
+        </td>
+        <td>
+          <span class="timestamp">{{ job.created_at|datetime }}</span>
+        </td>
+        <td>
+          {% if job.finished_at %}
+          <span class="timestamp">{{ job.finished_at|datetime }}</span>
+          {% else %} - {% endif %}
+        </td>
+        <td>
+          {{ job.error.message if job.error else '-' }}
+        </td>
+        <td>
+          {% if job.status == 'succeeded' and job.fine_tuned_model %}
+            {% if current_model == job.fine_tuned_model%}
+                <span class="job-status status-succeeded">In use</span>
+            {% else %}
+                <button class="use-model-btn" data-model="{{ job.fine_tuned_model }}">Use this model</button>
+            {% endif %}
+          {% endif %}
+        </td>
+        <td>
+  {% if job.status%}
+    <button
+      class="delete-btn"
+      data-modelid="{{job.fine_tuned_model}}"
+      title="Delete"
+      style="display: flex; align-items: center; gap: 4px;"
+    >
+      Delete
+    </button>
+  {% else %}
+    -
+  {% endif %}
+</td>
+
+      </tr>
+      {%endif%}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="text-align: center; color: #6c757d">No fine-tuning jobs found.</p>
+  {% endif %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const useModelButtons = document.querySelectorAll('.use-model-btn');
+    
+    useModelButtons.forEach(button => {
+      button.addEventListener('click', async function() {
+        const model = this.dataset.model;
+        try {
+          const response = await fetch('/config/current_model', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ value: model })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            alert('Model updated successfully!');
+          } else {
+            alert('Error updating model: ' + data.error);
+          }
+        } catch (error) {
+          alert('Error updating model: ' + error.message);
+        }
+      });
+    });
+  });
+
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const modelId = this.dataset.modelid; 
+     console.log(modelId);
+     
+    const confirmed = confirm(`Are you sure you want to delete this model (${modelId})? This cannot be undone.`);
+    if (confirmed) {
+      fetch(`/delete-model`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ model_id: modelId })
+      }).then(res => {
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert('Error deleting the file.');
+        }
+      });
+    }
+  });
+});
+
+
+
+
+</script>
+{% endblock %}

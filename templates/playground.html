@@ -1,0 +1,133 @@
+{% extends "base.html" %} {% block title %}AI Playground - EdHub{% endblock %}
+{% block head %}
+<style>
+  .input-section {
+    margin-bottom: 2rem;
+  }
+
+  .input-field {
+    width: 100%;
+    min-height: 100px;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 1rem;
+    resize: vertical;
+    margin-bottom: 1rem;
+  }
+
+  .model-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .output-section {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    min-height: 100px;
+    white-space: pre-wrap;
+  }
+
+  .loading {
+    display: none;
+    text-align: center;
+    margin: 1rem 0;
+  }
+
+  .error-message {
+    color: #dc3545;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #f8d7da;
+    border-radius: 4px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="playground-container">
+  <h2 style="margin-bottom: 1.5rem; text-align: center">AI Playground</h2>
+
+  {% if error %}
+  <div class="error-message">Error: {{ error }}</div>
+  {% endif %}
+
+  <div class="input-section">
+    <h4 class="label" style="margin-bottom: 5px">GPT Model</h4>
+    <select class="model-select" id="modelSelect">
+      <option value="{{ current_model }}">
+        Current Model: {{ current_model }}
+      </option>
+      {% for job in jobs %} {% if job.status == 'succeeded' and
+      job.fine_tuned_model %}
+      <option value="{{ job.fine_tuned_model }}">
+        {{ job.fine_tuned_model }}
+      </option>
+      {% endif %} {% endfor %}
+      <option value="gpt-4o-mini">gpt-4o-mini</option>
+    </select>
+    <textarea
+      class="input-field"
+      id="promptInput"
+      placeholder="Type your prompt here and press Enter to get a response..."
+    ></textarea>
+    <div class="loading" id="loadingIndicator">Processing...</div>
+  </div>
+
+  <div class="output-section" id="outputSection">
+    Response will appear here...
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const promptInput = document.getElementById("promptInput");
+    const outputSection = document.getElementById("outputSection");
+    const loadingIndicator = document.getElementById("loadingIndicator");
+    const modelSelect = document.getElementById("modelSelect");
+
+    promptInput.addEventListener("keydown", async function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+
+        const prompt = this.value.trim();
+        if (!prompt) return;
+
+        const selectedModel = modelSelect.value;
+
+        try {
+          loadingIndicator.style.display = "block";
+          outputSection.textContent = "";
+
+          const response = await fetch("/open-ai", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": "{{ api_key }}",
+            },
+            body: JSON.stringify({
+              prompt: prompt,
+              model: selectedModel,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            outputSection.textContent = JSON.stringify(data, null, 2);
+          } else {
+            outputSection.textContent = `Error: ${data.error}`;
+          }
+        } catch (error) {
+          outputSection.textContent = `Error: ${error.message}`;
+        } finally {
+          loadingIndicator.style.display = "none";
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

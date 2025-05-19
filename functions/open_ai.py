@@ -19,7 +19,7 @@ def get_open_ai_completion(prompt: str, model: str = "gpt-4", system_prompt: str
     """
 
     response = client.responses.create(
-        model="gpt-4o-mini",
+        model = model,
         input=[
             {
                 "role": "system",
