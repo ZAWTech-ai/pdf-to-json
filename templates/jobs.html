@@ -92,7 +92,15 @@
     color: #6c757d;
     font-size: 0.875rem;
   }
-
+.delete-btn{
+   background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
   .use-model-btn {
     background-color: #4CAF50;
     color: white;
@@ -133,13 +141,15 @@
         <th>Finished</th>
         <th>Error</th>
         <th>Actions</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody>
       {% for job in jobs %}
+      {%if job.status != 'cancelled'%}
       <tr>
         <td>
-          <span class="job-id">{{ job.id }}</span> </br>
+          <span class="job-id">{{ job.id }}</span><br />
           {%if job.fine_tuned_model %}
           <p><small class="fine-tuned-model">Fine tuned model: {{ job.fine_tuned_model }}</small></p>
           {% endif %}
@@ -184,7 +194,23 @@
             {% endif %}
           {% endif %}
         </td>
+        <td>
+  {% if job.status%}
+    <button
+      class="delete-btn"
+      data-modelid="{{job.fine_tuned_model}}"
+      title="Delete"
+      style="display: flex; align-items: center; gap: 4px;"
+    >
+      Delete
+    </button>
+  {% else %}
+    -
+  {% endif %}
+</td>
+
       </tr>
+      {%endif%}
       {% endfor %}
     </tbody>
   </table>
@@ -223,5 +249,34 @@
       });
     });
   });
+
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const modelId = this.dataset.modelid; 
+     console.log(modelId);
+     
+    const confirmed = confirm(`Are you sure you want to delete this model (${modelId})? This cannot be undone.`);
+    if (confirmed) {
+      fetch(`/delete-model`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ model_id: modelId })
+      }).then(res => {
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert('Error deleting the file.');
+        }
+      });
+    }
+  });
+});
+
+
+
+
 </script>
 {% endblock %}

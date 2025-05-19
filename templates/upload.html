@@ -35,7 +35,15 @@ block head %}
     cursor: pointer;
     transition: background-color 0.3s;
   }
-
+.delete-btn{
+   background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
   .upload-area:hover {
     background-color: #f8f9fa;
   }
@@ -223,6 +231,7 @@ block head %}
           <th>Created</th>
           <th>Status</th>
           <th>Action</th>
+          <th>Delete</th>
         </tr>
       </thead>
       <tbody>
@@ -241,7 +250,6 @@ block head %}
     <span class="file-status status-uploaded">uploaded</span>
   {% endif %}
 </td>
-
           <td>
             <button 
               class="create-job-btn" 
@@ -250,6 +258,10 @@ block head %}
             >
               Create Job
             </button>
+          </td>
+
+           
+   <td><button class="delete-btn" data-file-id="{{ file.id }}">Delete</button>
           </td>
         </tr>
         {% endfor %}
@@ -466,5 +478,44 @@ block head %}
       button.style.backgroundColor = '#dc3545';
     }
   }
+
+
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const fileId = this.dataset.fileId;
+
+    if (!fileId) {
+      alert("File ID not found.");
+      return;
+    }
+
+    const confirmed = confirm(`Are you sure you want to delete this file (${fileId})? This cannot be undone.`);
+    if (confirmed) {
+      fetch('/delete-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ file_id: fileId })
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.status === 'deleted') {
+          alert("File deleted successfully.");
+          location.reload();
+        } else {
+          alert("Error: " + (result.error || "Failed to delete file."));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Unexpected error occurred.");
+      });
+    }
+  });
+});
+
+
 </script>
 {% endblock %}

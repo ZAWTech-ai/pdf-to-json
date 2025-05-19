@@ -130,3 +130,56 @@ def list_fine_tuning_jobs():
         raise Exception(f"Error listing fine-tuning jobs: {str(e)}")
     except Exception as e:
         raise Exception(f"Unexpected error: {str(e)}")
+
+def delete_model_from_gpt(model_id):
+    """
+    Delete a model from OpenAI's servers.
+    """
+    try:
+        api_key = os.getenv('GPT_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
+
+        url = f"https://api.openai.com/v1/models/{model_id}"
+
+        response = requests.delete(
+            url,
+            headers={
+                'Authorization': f'Bearer {api_key}'
+            }
+        )
+
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Error deleting file from OpenAI: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error: {str(e)}")
+
+
+def delete_file_from_openai(file_id):
+    """
+    Delete a file from OpenAI's servers.
+    """
+    try:
+        api_key = os.getenv('GPT_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
+
+        url = f"https://api.openai.com/v1/files/{file_id}"
+
+        response = requests.delete(
+            url,
+            headers={
+                'Authorization': f'Bearer {api_key}'
+            }
+        )
+
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Error deleting file from OpenAI: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error: {str(e)}")

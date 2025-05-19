@@ -11,7 +11,7 @@ from functions.send_email import send_email
 from functions.upload_file import upload_file
 from functions.lite_llm import get_completion
 from functions.open_ai import get_open_ai_completion
-from functions.fine_tuning import list_files, upload_file_for_fine_tuning, list_fine_tuning_jobs
+from functions.fine_tuning import list_files, upload_file_for_fine_tuning, list_fine_tuning_jobs, delete_model_from_gpt,delete_file_from_openai
 import os
 from dotenv import load_dotenv
 import requests
@@ -371,6 +371,38 @@ def fine_tune_upload(current_user):
         return jsonify({
             'error': str(e)
         }), 500
+
+
+@main_bp.route('/delete-model', methods=['POST'])
+@token_required
+def delete_model(current_user):
+    data = request.json
+    model_id = data.get('model_id')  # Correct key
+    print(model_id)
+    if not model_id:
+        return jsonify({'error': 'Missing file ID'}), 400
+
+    try:
+        result = delete_model_from_gpt(model_id)  # Use new helper function
+        return jsonify({'status': 'deleted', 'result': result}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@main_bp.route('/delete-file', methods=['POST'])
+@token_required
+def delete_file(current_user):
+    data = request.json
+    file_id = data.get('file_id')  # Correct key
+    print(file_id)
+    if not file_id:
+        return jsonify({'error': 'Missing file ID'}), 400
+
+    try:
+        result = delete_file_from_openai(file_id)  # Use new helper function
+        return jsonify({'status': 'deleted', 'result': result}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # @main_bp.route('/fine-tune', methods=['POST'])
