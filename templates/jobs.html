@@ -146,7 +146,7 @@
     </thead>
     <tbody>
       {% for job in jobs %}
-      {%if job.status != 'cancelled'%}
+      {% if job.status != 'cancelled' and job.status != 'failed' %}
       <tr>
         <td>
           <span class="job-id">{{ job.id }}</span><br />
