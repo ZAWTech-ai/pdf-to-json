@@ -141,7 +141,11 @@
         <td>
           <span class="job-id">{{ job.id }}</span> </br>
           {%if job.fine_tuned_model %}
-          <small class="fine-tuned-model">Fine tuned model: {{ job.fine_tuned_model }}</small>
+          <p><small class="fine-tuned-model">Fine tuned model: {{ job.fine_tuned_model }}</small></p>
+          {% endif %}
+       
+          {%if job.training_file %}
+          <p><small class="fine-tuned-model">Training file: {{ job.training_file }}</small></p>
           {% endif %}
         </td>
         <td>
