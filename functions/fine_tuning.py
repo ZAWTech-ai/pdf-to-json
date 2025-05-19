@@ -1,7 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
-
+from flask import jsonify
 load_dotenv()
 
 
@@ -10,7 +10,7 @@ def upload_file_for_fine_tuning(file_path):
     Upload a file to OpenAI for fine-tuning.
 
     Args:
-        file_path (str): Path to the file to be uploaded
+        file_path (str): Path to the file to be uploadedx
 
     Returns:
         dict: Response from OpenAI API containing file details
@@ -79,13 +79,21 @@ def list_files():
 
         # Check if the request was successful
         response.raise_for_status()
+        response_data = response.json()
+        files_list = response_data.get("data", [])
+        # Step 2: Filter out .csv files
+        filtered_files = [
+            file for file in files_list
+            if not file.get('filename', '').endswith('.csv')
+        ]
 
-        return response.json()
+        # Step 3: Return filtered files
+        return {"data": filtered_files}
 
     except requests.exceptions.RequestException as e:
         raise Exception(f"Error listing files from OpenAI: {str(e)}")
     except Exception as e:
-        raise Exception(f"Unexpected error: {str(e)}")
+        return {"error": f"Unexpected error: {str(e)}"}
 
 
 def list_fine_tuning_jobs():

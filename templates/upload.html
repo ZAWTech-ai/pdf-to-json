@@ -212,6 +212,7 @@ block head %}
 {% endblock %} {% block content %}
 <div class="main-container">
   <div class="files-section">
+
     <h3>Uploaded Data sets</h3>
     {% if files %}
     <table class="files-table">
@@ -233,13 +234,14 @@ block head %}
           </td>
           <td>{{ (file.bytes / 1024)|round(2) }} KB</td>
           <td>{{ file.created_at|datetime }}</td>
-          <td>
-            <span
-              class="file-status {% if file.status == 'processed' %}status-processed{% else %}status-{{ file.status }}{% endif %}"
-            >
-              {{ file.status }}
-            </span>
-          </td>
+        <td>
+  {% if config.used_data_set and file.id in config.used_data_set %}
+    <span class="file-status status-processed">processed</span>
+  {% else %}
+    <span class="file-status status-uploaded">uploading</span>
+  {% endif %}
+</td>
+
           <td>
             <button 
               class="create-job-btn" 

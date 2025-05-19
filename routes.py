@@ -23,7 +23,7 @@ from functions.config_manager import (
 )
 
 load_dotenv()
-
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'data', 'config.json')
 main_bp = Blueprint('main_bp', __name__)
 ALLOWED_ORIGINS = ["https://beta.edhub.school", "https://edhub.school"]
 API_KEY = os.getenv("X_API_KEY")
@@ -88,7 +88,7 @@ def home():
 def login_page():
     return render_template('login.html')
 
-
+config = read_config()
 @main_bp.route('/data-sets', methods=['GET'])
 @login_required
 def upload_page():
@@ -99,8 +99,8 @@ def upload_page():
     try:
         # Get the list of files
         files_result = list_files()
-
-        return render_template('upload.html', files=files_result.get('data', []), jobs=jobs.get('data', []))
+        config = read_config()
+        return render_template('upload.html', files=files_result.get('data', []), jobs=jobs.get('data', []),config=config)
     except Exception as e:
         return render_template('upload.html', files=[], error=str(e))
 
@@ -400,6 +400,17 @@ def create_training_job(current_user):
         if not training_file:
             return jsonify({'error': 'Training file ID is required'}), 400
 
+        # Read existing config
+        config = read_config()
+
+        # Append training_file if not already in used_data_set
+        if 'used_data_set' not in config:
+            config['used_data_set'] = []
+
+        if training_file not in config['used_data_set']:
+            config['used_data_set'].append(training_file)
+            write_config(config)
+
         # Get API key from environment variables
         api_key = os.getenv('GPT_API_KEY')
         if not api_key:
@@ -410,27 +421,28 @@ def create_training_job(current_user):
         url = "https://api.openai.com/v1/fine_tuning/jobs"
 
         # Make the API request
-        response = requests.post(
-            url,
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json'
-            },
-            json={
-                'training_file': training_file,
-                'model': model
-            }
-        )
+        # response = requests.post(
+        #     url,
+        #     headers={
+        #         'Authorization': f'Bearer {api_key}',
+        #         'Content-Type': 'application/json'
+        #     },
+        #     json={
+        #         'training_file': training_file,
+        #         'model': model
+        #     }
+        # )
 
         # Check if the request was successful
-        response.raise_for_status()
+        # response.raise_for_status()
 
-        return jsonify(response.json()), 200
+        return jsonify({'message': f'insert this ID {training_file} in used_data_set'}), 200
 
     except requests.exceptions.RequestException as e:
         return jsonify({'error': f'Error creating training job: {str(e)}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 @main_bp.route('/fine-tuning', methods=['GET'])

@@ -1,3 +1,8 @@
 {
-  "current_model": "ft:gpt-4o-mini-2024-07-18:edhub:edhub-test:BYBlra0K"
+  "current_model": "ft:gpt-4.1-nano-2025-04-14:edhub::BYWBstOP",
+  "used_data_set": [
+    "file-8DtThjSLHjG6FpAKE6gXTd",
+    "file-FkH6h3pd5ie79es6xw2AMZ",
+    "file-NEbsRfECMYcRa69ruUy6SZ"
+  ]
 }
