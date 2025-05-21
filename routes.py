@@ -11,7 +11,7 @@ from functions.send_email import send_email
 from functions.upload_file import upload_file
 from functions.lite_llm import get_completion
 from functions.open_ai import get_open_ai_completion
-from functions.fine_tuning import list_files, upload_file_for_fine_tuning, list_fine_tuning_jobs, delete_model_from_gpt,delete_file_from_openai
+from functions.fine_tuning import list_files, upload_file_for_fine_tuning, list_fine_tuning_jobs, delete_model_from_gpt, delete_file_from_openai
 import os
 from dotenv import load_dotenv
 import requests
@@ -23,7 +23,8 @@ from functions.config_manager import (
 )
 
 load_dotenv()
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'data', 'config.json')
+CONFIG_PATH = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), 'static', 'data', 'config.json')
 main_bp = Blueprint('main_bp', __name__)
 ALLOWED_ORIGINS = ["https://beta.edhub.school", "https://edhub.school"]
 API_KEY = os.getenv("X_API_KEY")
@@ -88,7 +89,10 @@ def home():
 def login_page():
     return render_template('login.html')
 
+
 config = read_config()
+
+
 @main_bp.route('/data-sets', methods=['GET'])
 @login_required
 def upload_page():
@@ -100,7 +104,7 @@ def upload_page():
         # Get the list of files
         files_result = list_files()
         config = read_config()
-        return render_template('upload.html', files=files_result.get('data', []), jobs=jobs.get('data', []),config=config)
+        return render_template('upload.html', files=files_result.get('data', []), jobs=jobs.get('data', []), config=config)
     except Exception as e:
         return render_template('upload.html', files=[], error=str(e))
 
@@ -316,7 +320,7 @@ def open_ai():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     # If the result is a list, convert to object format
-   
+
         # return parsed
         # return jsonify(data), 200
         # data = json.loads(text)
@@ -453,20 +457,20 @@ def create_training_job(current_user):
         url = "https://api.openai.com/v1/fine_tuning/jobs"
 
         # Make the API request
-        # response = requests.post(
-        #     url,
-        #     headers={
-        #         'Authorization': f'Bearer {api_key}',
-        #         'Content-Type': 'application/json'
-        #     },
-        #     json={
-        #         'training_file': training_file,
-        #         'model': model
-        #     }
-        # )
+        response = requests.post(
+            url,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            },
+            json={
+                'training_file': training_file,
+                'model': model
+            }
+        )
 
         # Check if the request was successful
-        # response.raise_for_status()
+        response.raise_for_status()
 
         return jsonify({'message': f'insert this ID {training_file} in used_data_set'}), 200
 
@@ -474,7 +478,6 @@ def create_training_job(current_user):
         return jsonify({'error': f'Error creating training job: {str(e)}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 
 @main_bp.route('/fine-tuning', methods=['GET'])
