@@ -1,8 +1,16 @@
+import os
 from flask import jsonify
 from openai import OpenAI
 from prompts.gen_ai_system_prompt import gen_ai_system_prompt
+from prompts.user_prompt_post_fix import user_prompt_post_fix
 import json
-client = OpenAI()
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+client = OpenAI(api_key=os.getenv("GPT_API_KEY"))
 
 
 def get_open_ai_completion(prompt: str, model: str = "gpt-4", system_prompt: str = None) -> str:
@@ -18,8 +26,10 @@ def get_open_ai_completion(prompt: str, model: str = "gpt-4", system_prompt: str
         str: The model's response in JSON format
     """
 
+    full_prompt = f"{prompt}{user_prompt_post_fix}"
+    print(full_prompt)
     response = client.responses.create(
-        model = model,
+        model=model,
         input=[
             {
                 "role": "system",
@@ -35,7 +45,7 @@ def get_open_ai_completion(prompt: str, model: str = "gpt-4", system_prompt: str
                 "content": [
                     {
                         "type": "input_text",
-                        "text": prompt
+                        "text": full_prompt
                     }
                 ]
             },
